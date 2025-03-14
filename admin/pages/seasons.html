@@ -1,0 +1,227 @@
+<div class="title">
+    <i class="uil uil-presentation-play"></i>
+    <span class="text">إدارة الأنمي</span>
+</div>
+
+
+<div class="table-container">
+    <h2>قائمة الأنمي</h2>
+    
+        <div id="anime-list" class="anime-list">
+        </div>
+</div>
+
+<div id="anime-dialog" class="dialog">
+    <div class="dialog-content">
+        <h3 id="dialog-title">إضافة أنمي</h3>
+        <form id="dialog-form">
+            <input type="text" id="season-id" placeholder="أدخل معرف الأنمي">
+
+            <input type="text" id="dialog-animeId" placeholder="أدخل معرف الأنمي" required>
+            
+            <textarea id="dialog-summary" placeholder="أدخل القصة" rows="6" required></textarea>
+            
+            <div class="dialog-actions">
+                <button type="submit" class="btn btn-success">حفظ</button>
+                <button type="button" class="btn btn-danger" id="dialog-delete" style="display: none;">حذف</button>
+                <button type="button" class="btn btn-secondary" id="dialog-cancel">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.anime-list {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.info{
+    width: 100%;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 10px;
+    color: rgb(255, 255, 255);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.anime-item {
+    display: flex;
+    width: 180px;
+    height: 250px;
+    overflow: hidden;
+    text-align: center;
+    border-radius: 12px;
+    background: #e6e5e5;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.anime-item:hover {
+    transform: scale(1.05);
+}
+
+.anime-item img.cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.anime-item .actions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 12px;
+    width: 100%;
+}
+
+.anime-item:hover .actions {
+    opacity: 1;
+}
+
+.anime-item .actions h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.anime-item .actions p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.anime-item .actions .buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    /* gap: 8px; */
+    margin-top: 10px;
+}
+
+.anime-item .actions .buttons button {
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 0px;
+    transition: background 0.3s ease;
+    
+}
+.anime-item .actions .buttons button:nth-child(2) {
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    
+    
+}
+
+.anime-item .actions .buttons button.btn-primary {
+    background-color: #007bff00;
+    color: white;
+}
+
+.anime-item .actions .buttons button.btn-danger {
+    background-color: #007bff00;
+    color: white;
+}
+
+.anime-item .actions .buttons button:hover {
+    background-color: #0057b3bb;
+}
+
+
+
+
+.dialog {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.dialog-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+    gap: 10px;
+}
+
+.dialog-content input,
+.dialog-content textarea,
+.dialog-content select {
+    margin: 10px 0px;
+    font-family: Cairo, sans-serif;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+
+}
+
+
+</style>
+
+<script>
+document.getElementById('anime-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        animeId: document.getElementById('animeId').value,
+        summary: document.getElementById('summary').value,
+        publisherId: auth.currentUser.uid
+    };
+    
+    try {
+        const response = await fetch('/seasons', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            messageToast('تم إضافة الأنمي بنجاح');
+            document.getElementById('anime-form').reset();
+            loadAnime();
+        } else {
+            throw new Error('فشل في إضافة الأنمي');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        messageToast('حدث خطأ أثناء إضافة الأنمي');
+    }
+});
+
+</script>

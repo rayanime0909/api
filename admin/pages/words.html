@@ -1,0 +1,150 @@
+<div class="title">
+    <i class="uil uil-ban"></i>
+    <span class="text">إدارة الكلمات الممنوعة</span>
+</div>
+
+<div class="table-container">
+    <h2>قائمة الكلمات الممنوعة</h2>
+    <div id="forbidden-words-list"></div>
+</div>
+
+<div class="modal" id="edit-word-modal">
+    <div class="modal-content">
+        <h2>تعديل كلمة ممنوعة</h2>
+        <form id="edit-word-form">
+            <div class="form-group">
+                <label for="word">الكلمة</label>
+                <input type="text" id="word" name="word" required>
+            </div>
+            <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">إلغاء</button>
+        </form>
+    </div>
+</div>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+}
+
+.word-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.word-item h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.actions button {
+    margin-left: 5px;
+}
+</style>
+
+<script>
+async function loadForbiddenWords() {
+    try {
+        const response = await fetch('http://192.168.32.146:3000/banned-words/all');
+        const words = await response.json();
+        displayForbiddenWords(words.words);
+    } catch (error) {
+        console.error('Error fetching forbidden words:', error);
+        messageToast('حدث خطأ في تحميل الكلمات الممنوعة');
+    }
+}
+
+function displayForbiddenWords(words) {
+    const wordsContainer = document.getElementById('forbidden-words-list');
+    wordsContainer.innerHTML = words.map(word => `
+        <div class="word-item">
+            <h3>${word}</h3>
+            <div class="actions">
+                <button onclick="editWord('${word}')">تعديل</button>
+                <button onclick="deleteWord('${word}')">حذف</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+let currentEditWord = null;
+
+function openEditModal(word) {
+    currentEditWord = word;
+    const modal = document.getElementById('edit-word-modal');
+    modal.style.display = 'block';
+    document.getElementById('word').value = word;
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-word-modal');
+    modal.style.display = 'none';
+    currentEditWord = null;
+}
+
+document.getElementById('edit-word-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentEditWord) return;
+
+    const updatedWord = document.getElementById('word').value;
+
+    try {
+        await fetch(`http://192.168.32.146:3000/banned-words/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldWord: currentEditWord, newWord: updatedWord })
+        });
+        messageToast('تم تحديث الكلمة بنجاح');
+        closeEditModal();
+        loadForbiddenWords();
+    } catch (error) {
+        console.error('Error updating word:', error);
+        messageToast('حدث خطأ أثناء تحديث الكلمة');
+    }
+});
+
+async function deleteWord(word) {
+    if (confirm('هل أنت متأكد من حذف هذه الكلمة؟')) {
+        try {
+            await fetch(`http://192.168.32.146:3000/banned-words/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ word })
+            });
+            messageToast('تم حذف الكلمة بنجاح');
+            loadForbiddenWords();
+        } catch (error) {
+            console.error('Error deleting word:', error);
+            messageToast('حدث خطأ أثناء حذف الكلمة');
+        }
+    }
+}
+
+loadForbiddenWords();
+
+window.onclick = function(event) {
+    const modal = document.getElementById('edit-word-modal');
+    if (event.target == modal) {
+        closeEditModal();
+    }
+}
+</script>

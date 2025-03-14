@@ -1,0 +1,152 @@
+<div class="title">
+    <i class="uil uil-newspaper"></i>
+    <span class="text">إدارة الأخبار</span>
+</div>
+
+<div class="form-container">
+    <h2>إضافة خبر جديد</h2>
+    <form id="news-form">
+        <div class="form-group">
+            <label for="title">عنوان الخبر</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        <div class="form-group">
+            <label for="image">صورة الخبر</label>
+            <input type="file" id="image" name="image" accept="image/*" required>
+        </div>
+        <div class="form-group">
+            <label for="news-content">محتوى الخبر</label>
+            <textarea id="news-content" name="content"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">نشر الخبر</button>
+    </form>
+</div>
+
+<div class="table-container">
+    <h2>قائمة الأخبار</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>العنوان</th>
+                <th>الناشر</th>
+                <th>تاريخ النشر</th>
+                <th>المشاهدات</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="news-list">
+            <!-- سيتم ملء هذا الجزء ديناميكياً -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.getElementById('news-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('title', document.getElementById('title').value);
+    formData.append('content', document.getElementById('news-content').value);
+    formData.append('image', document.getElementById('image').files[0]);
+    
+    try {
+        const response = await fetch('/news', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            messageToast('تم نشر الخبر بنجاح');
+            // document.getElementById('news-form').reset();
+            // loadNews();
+        } else {
+            throw new Error('فشل في نشر الخبر');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        messageToast('حدث خطأ أثناء نشر الخبر');
+    }
+});
+
+async function loadNews() {
+    try {
+        const response = await fetch('/news');
+        const news = await response.json();
+        const newsListElement = document.getElementById('news-list');
+        
+        newsListElement.innerHTML = news.map(item => `
+            <tr>
+                <td>${item.title}</td>
+                <td>${item.publisher}</td>
+                <td>${new Date(item.createdAt).toLocaleDateString('ar-SA')}</td>
+                <td>${item.views}</td>
+                <td>
+                    <button class="btn btn-primary" onclick="editNews(${item.id})">تعديل</button>
+                    <button class="btn btn-danger" onclick="deleteNews(${item.id})">حذف</button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error:', error);
+        messageToast('حدث خطأ أثناء تحميل الأخبار');
+    }
+}
+
+async function editNews(id) {
+    try {
+        const response = await fetch(`/news/${id}`);
+        const news = await response.json();
+        
+        document.getElementById('title').value = news.title;
+        editor.html.set(news.content);
+        
+        const submitButton = document.querySelector('#news-form button[type="submit"]');
+        submitButton.textContent = 'تحديث الخبر';
+        document.getElementById('news-form').dataset.editId = id;
+    } catch (error) {
+        console.error('Error:', error);
+        messageToast('حدث خطأ أثناء تحميل بيانات الخبر');
+    }
+}
+
+async function deleteNews(id) {
+    if (confirm('هل أنت متأكد من حذف هذا الخبر؟')) {
+        try {
+            const response = await fetch(`/api/news/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                messageToast('تم حذف الخبر بنجاح');
+                loadNews();
+            } else {
+                throw new Error('فشل في حذف الخبر');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            messageToast('حدث خطأ أثناء حذف الخبر');
+        }
+    }
+}
+
+let editor = new FroalaEditor('#news-content', {
+    language: 'ar',
+    direction: 'rtl',
+    heightMin: 200,
+    heightMax: 400,
+    imageUploadURL: '/upload/image',
+    imageUploadMethod: 'POST',
+    imageMaxSize: 5 * 1024 * 1024,
+    imageAllowedTypes: ['jpeg', 'jpg', 'png', 'gif'],
+    events: {
+        'image.uploaded': function (response) {
+            messageToast('تم رفع الصورة بنجاح');
+        },
+        'image.error': function (error, response) {
+            messageToast('حدث خطأ أثناء رفع الصورة');
+        }
+    }
+});
+
+loadNews();
+</script>

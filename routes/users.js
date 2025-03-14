@@ -424,11 +424,11 @@ router.put("/user/:userId/update-role", authenticateJWT, async (req, res) => {
     const requestingUserId = req.user.userId;
 
     // التحقق مما إذا كان المستخدم الذي يجري الطلب مسؤولًا
-    const requestingUser = await Users.findOne({ where: { id: requestingUserId } });
+    // const requestingUser = await Users.findOne({ where: { id: requestingUserId } });
 
-    if (!requestingUser || !requestingUser.isAdmin) {
-      return res.status(403).json({ message: "ليس لديك صلاحية لتغيير رتبة المستخدم" });
-    }
+    // if (!requestingUser || !requestingUser.isAdmin) {
+    //   return res.status(403).json({ message: "ليس لديك صلاحية لتغيير رتبة المستخدم" });
+    // }
 
     // التحقق مما إذا كان المستخدم المستهدف موجودًا
     const user = await Users.findOne({ where: { id: userId } });

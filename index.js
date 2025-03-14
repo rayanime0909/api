@@ -76,6 +76,6 @@ app.use("/ads", adsRoutes);
 app.use("/welcome-messages", welcomeMessageRoutes);
 
 const PORT = 3000;
-app.listen(PORT,'192.168.51.146', () => {
-    console.log(`Server is running on http://192.168.51.146:${PORT}`);
+app.listen(PORT,'0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${PORT}`);
 });
